@@ -1,7 +1,8 @@
 # Custom
 .vs/
 *.vcxproj.user
-*x64/Debug/
+x64/
+command/x64/
 
 
 # Prerequisites
@@ -40,4 +41,3 @@
 *.pdb
 *.idb
 *.ilk
-/command/x64/Debug/command.log
