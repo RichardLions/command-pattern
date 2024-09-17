@@ -1,5 +1,8 @@
 # Custom
 .vs/
+*.vcxproj.user
+*x64/Debug/
+
 
 # Prerequisites
 *.d
