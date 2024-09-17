@@ -36,3 +36,8 @@
 *.exe
 *.out
 *.app
+*.tlog
+*.pdb
+*.idb
+*.ilk
+/command/x64/Debug/command.log
