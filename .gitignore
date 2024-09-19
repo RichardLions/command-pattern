@@ -3,7 +3,7 @@
 *.vcxproj.user
 x64/
 command/x64/
-
+/vcpkg_installed/
 
 # Prerequisites
 *.d
@@ -41,3 +41,4 @@ command/x64/
 *.pdb
 *.idb
 *.ilk
+

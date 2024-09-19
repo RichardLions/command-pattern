@@ -1,10 +1,56 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="commandqueue.h">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="logger.h" />
-    <ClInclude Include="random.h" />
+    <ClInclude Include="command.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="random.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="commandexamples.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="logger.h">
+      <Filter>code</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitattributes">
+      <Filter>misc</Filter>
+    </None>
+    <None Include=".gitignore">
+      <Filter>misc</Filter>
+    </None>
+    <None Include=".runsettings">
+      <Filter>misc</Filter>
+    </None>
+    <None Include="README.md">
+      <Filter>misc</Filter>
+    </None>
+    <None Include="vcpkg.json">
+      <Filter>misc</Filter>
+    </None>
+    <None Include="vcpkg-configuration.json">
+      <Filter>misc</Filter>
+    </None>
+    <None Include=".editorconfig">
+      <Filter>misc</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="code">
+      <UniqueIdentifier>{e585ae4b-9a1b-4fe7-b801-e892441a8778}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc">
+      <UniqueIdentifier>{41e75415-31dd-4206-a89f-b6c9d056c192}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
