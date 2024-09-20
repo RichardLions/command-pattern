@@ -1,9 +1,28 @@
-# Command Queue Pattern
+# Command Pattern
 
 This pattern was inspired by https://gameprogrammingpatterns.com/
 
 ## Features
-* Does stuff
+
+The command queue can:
+* Queue Commands
+* Execute Commands
+* Rollback Commands
+
+Example Usage:
+```cpp
+PopulateQueue(queue);
+
+while(queue.HasPendingCommand())
+{
+    queue.ExecuteNextCommand();
+}
+
+while(queue.HasPendingRollbackCommand())
+{
+    queue.RollbackCommand();
+}
+```
 
 ## Setup
 

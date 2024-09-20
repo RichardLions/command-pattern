@@ -14,6 +14,13 @@ public:
         ++m_CommandIndex;
     }
 
+    /// HasPendingRollbackCommand() has to be true before calling
+    void RollbackCommand()
+    {
+        --m_CommandIndex;
+        m_CommandQueue[m_CommandIndex]->Rollback();
+    }
+
     void ClearQueue()
     {
         m_CommandQueue.clear();
@@ -28,9 +35,15 @@ public:
         m_CommandQueue.erase(itr, std::end(m_CommandQueue));
     }
 
-    bool HasPendingCommand() const
+    [[nodiscard]] bool HasPendingCommand() const
     {
         return GetCommandQueueSize() > m_CommandIndex;
+    }
+
+    [[nodiscard]] bool HasPendingRollbackCommand() const
+    {
+        const uint32_t queueSize{GetCommandQueueSize()};
+        return m_CommandIndex != 0 && queueSize >= m_CommandIndex;
     }
 
     void QueueCommand(std::shared_ptr<Command> command)
@@ -38,12 +51,12 @@ public:
         m_CommandQueue.push_back(command);
     }
 
-    uint32_t GetCommandIndex() const
+    [[nodiscard]] uint32_t GetCommandIndex() const
     {
         return m_CommandIndex;
     }
 
-    uint32_t GetCommandQueueSize() const
+    [[nodiscard]] uint32_t GetCommandQueueSize() const
     {
         return static_cast<uint32_t>(m_CommandQueue.size());
     }
