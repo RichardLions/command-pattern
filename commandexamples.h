@@ -142,7 +142,7 @@ TEST_CASE("Command Queue", "")
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 1);
 
-        queue.ExecuteNextCommand();
+        queue.ExecuteCommand();
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
@@ -156,9 +156,9 @@ TEST_CASE("Command Queue", "")
         REQUIRE(queue.GetCommandIndex() == 1);
         REQUIRE(queue.GetCommandQueueSize() == 4);
 
-        queue.ExecuteNextCommand();
-        queue.ExecuteNextCommand();
-        queue.ExecuteNextCommand();
+        queue.ExecuteCommand();
+        queue.ExecuteCommand();
+        queue.ExecuteCommand();
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 4);
@@ -175,9 +175,9 @@ TEST_CASE("Command Queue", "")
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.ExecuteNextCommand();
-        queue.ExecuteNextCommand();
-        queue.ExecuteNextCommand();
+        queue.ExecuteCommand();
+        queue.ExecuteCommand();
+        queue.ExecuteCommand();
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 3);
@@ -190,7 +190,7 @@ TEST_CASE("Command Queue", "")
         REQUIRE(queue.GetCommandQueueSize() == 0);
     }
 
-    SECTION("Prune Command Queue")
+    SECTION("Clear Pending Commands")
     {
         queue.QueueCommand(CreateRandomCommand(value));
         queue.QueueCommand(CreateRandomCommand(value));
@@ -200,13 +200,13 @@ TEST_CASE("Command Queue", "")
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.ExecuteNextCommand();
+        queue.ExecuteCommand();
         REQUIRE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.PrunePendingCommands();
+        queue.ClearPendingCommands();
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
@@ -218,7 +218,7 @@ TEST_CASE("Command Queue", "")
         REQUIRE(queue.GetCommandIndex() == 1);
         REQUIRE(queue.GetCommandQueueSize() == 2);
 
-        queue.PrunePendingCommands();
+        queue.ClearPendingCommands();
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
@@ -226,17 +226,30 @@ TEST_CASE("Command Queue", "")
 
         queue.QueueCommand(CreateRandomCommand(value));
         queue.QueueCommand(CreateRandomCommand(value));
-        queue.ExecuteNextCommand();
+        queue.ExecuteCommand();
         REQUIRE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 2);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.PrunePendingCommands();
+        queue.ClearPendingCommands();
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 2);
         REQUIRE(queue.GetCommandQueueSize() == 2);
+
+        queue.RollbackCommand();
+        queue.RollbackCommand();
+        REQUIRE(queue.HasPendingCommand());
+        REQUIRE_FALSE(queue.HasPendingRollbackCommand());
+        REQUIRE(queue.GetCommandIndex() == 0);
+        REQUIRE(queue.GetCommandQueueSize() == 2);
+
+        queue.ClearPendingCommands();
+        REQUIRE_FALSE(queue.HasPendingCommand());
+        REQUIRE_FALSE(queue.HasPendingRollbackCommand());
+        REQUIRE(queue.GetCommandIndex() == 0);
+        REQUIRE(queue.GetCommandQueueSize() == 0);
     }
 
     SECTION("Execute Rollback Commands")
@@ -247,7 +260,7 @@ TEST_CASE("Command Queue", "")
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 1);
 
-        queue.ExecuteNextCommand();
+        queue.ExecuteCommand();
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
@@ -266,9 +279,9 @@ TEST_CASE("Command Queue", "")
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.ExecuteNextCommand();
-        queue.ExecuteNextCommand();
-        queue.ExecuteNextCommand();
+        queue.ExecuteCommand();
+        queue.ExecuteCommand();
+        queue.ExecuteCommand();
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 3);

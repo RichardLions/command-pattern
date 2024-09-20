@@ -8,7 +8,7 @@ class CommandQueue final
 {
 public:
     /// HasPendingCommand() has to be true before calling
-    void ExecuteNextCommand()
+    void ExecuteCommand()
     {
         m_CommandQueue[m_CommandIndex]->Execute();
         ++m_CommandIndex;
@@ -27,9 +27,9 @@ public:
         m_CommandIndex = 0;
     }
 
-    /// Removes any commands ahead of m_CommandIndex.
+    /// Removes any commands ahead of and including the current pending command.
     /// HasPendingCommand() has to be true before calling
-    void PrunePendingCommands()
+    void ClearPendingCommands()
     {
         const auto itr{std::begin(m_CommandQueue) + m_CommandIndex};
         m_CommandQueue.erase(itr, std::end(m_CommandQueue));
