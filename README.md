@@ -1,6 +1,6 @@
 # Command Pattern
 
-This pattern was inspired by https://gameprogrammingpatterns.com/
+This pattern was inspired by [Game Programming Patterns](https://gameprogrammingpatterns.com/).
 
 ## Features
 
@@ -8,6 +8,7 @@ The command queue can:
 * Queue Commands
 * Execute Commands
 * Rollback Commands
+* Clear Commands
 
 Example Usage:
 ```cpp
@@ -89,3 +90,10 @@ To create a clean vcpkg.json and vcpkg-configuration.json file run:
 ```
 vcpkg new --application
 ```
+
+TODO:
+- [x] Inheritance Implementation
+- [x] Inheritance Implementation Unit Tests
+- [ ] Type Erasure Implementation Example
+- [ ] Type Erasure Implementation Example Unit Tests
+- [ ] Benchmarking

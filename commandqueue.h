@@ -1,10 +1,11 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 
 #include "command.h"
 
-class CommandQueue final
+class CommandQueue
 {
 public:
     /// HasPendingCommand() has to be true before calling
@@ -42,13 +43,18 @@ public:
 
     [[nodiscard]] bool HasPendingRollbackCommand() const
     {
-        const uint32_t queueSize{GetCommandQueueSize()};
-        return m_CommandIndex != 0 && queueSize >= m_CommandIndex;
+        return m_CommandIndex != 0 && GetCommandQueueSize() >= m_CommandIndex;
     }
 
-    void QueueCommand(std::shared_ptr<Command> command)
+    template<class CommandType>
+    void QueueCommand(CommandType&& command)
     {
-        m_CommandQueue.push_back(command);
+        m_CommandQueue.push_back(std::make_unique<CommandType>(std::forward<CommandType>(command)));
+    }
+
+    void QueueCommand(std::unique_ptr<Command>&& command)
+    {
+        m_CommandQueue.push_back(std::move(command));
     }
 
     [[nodiscard]] uint32_t GetCommandIndex() const
@@ -61,6 +67,6 @@ public:
         return static_cast<uint32_t>(m_CommandQueue.size());
     }
 private:
-    std::vector<std::shared_ptr<Command>> m_CommandQueue{};
+    std::vector<std::unique_ptr<Command>> m_CommandQueue{};
     uint32_t m_CommandIndex{0};
 };
