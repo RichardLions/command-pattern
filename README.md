@@ -28,29 +28,33 @@ Queuing a command after rolling back a command will add the new command to the b
 
 ```cpp
 // Clear Pending
-queue.QueueCommand(commandA);
-queue.ExecuteCommand(); // Execute A
-queue.RollbackCommand(); // Rollback A
+{
+    queue.QueueCommand(commandA);
+    queue.ExecuteCommand(); // Execute A
+    queue.RollbackCommand(); // Rollback A
 
-queue.QueueCommand(commandB);
-queue.ExecuteCommand(); // Execute A
-queue.ExecuteCommand(); // Execute B
+    queue.QueueCommand(commandB);
+    queue.ExecuteCommand(); // Execute A
+    queue.ExecuteCommand(); // Execute B
 
-queue.RollbackCommand(); // Rollback B
-queue.ClearPendingCommands() // Removes B
+    queue.RollbackCommand(); // Rollback B
+    queue.ClearPendingCommands() // Removes B
 
-queue.QueueCommand(commandC);
-queue.ExecuteCommand(); // Execute A
-queue.ExecuteCommand(); // Execute C
+    queue.QueueCommand(commandC);
+    queue.ExecuteCommand(); // Execute A
+    queue.ExecuteCommand(); // Execute C
+}
 
 // Clear All
-queue.QueueCommand(commandA);
-queue.ExecuteCommand(); // Execute A
-queue.RollbackCommand(); // Rollback A
-queue.ClearQueue(); // Removes all commands
+{
+    queue.QueueCommand(commandA);
+    queue.ExecuteCommand(); // Execute A
+    queue.RollbackCommand(); // Rollback A
+    queue.ClearQueue(); // Removes all commands
 
-queue.QueueCommand(commandB);
-queue.ExecuteCommand(); // Execute B
+    queue.QueueCommand(commandB);
+    queue.ExecuteCommand(); // Execute B
+}
 ```
 
 ## Setup

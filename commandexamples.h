@@ -13,106 +13,72 @@ namespace
         using ValueType = int32_t;
 
         [[nodiscard]] ValueType GetValue() const { return m_Value; }
-        void Add(const ValueType add)
+        void ModifyValue(const ValueType modification)
         {
-            const ValueType before{m_Value};
-            m_Value += add;
-            Logger::LogMessage(std::format("WorkingValue: Add({} + {} == {})", before, add, m_Value));
-        }
-
-        void Subtract(const ValueType subtract)
-        {
-            const ValueType before{m_Value};
-            m_Value -= subtract;
-            Logger::LogMessage(std::format("WorkingValue: Subtract({} - {} == {})", before, subtract, m_Value));
+            m_Value += modification;
         }
     private:
         ValueType m_Value{0};
     };
 
-    class AdditionCommand final : public Command
+    class ModifyValueCommand final : public Command
     {
     public:
-        AdditionCommand(std::shared_ptr<WorkingValue> value)
+        ModifyValueCommand(std::shared_ptr<WorkingValue> value, const int32_t valueModification)
             : m_Value{value}
-            , m_Modification{Random::RandomInRange(1, 100)}
+            , m_Modification{valueModification}
         {
         }
 
         void Execute() override
         {
-            Logger::LogMessage("Execute AdditionCommand");
-            m_Value->Add(m_Modification);
+            m_Value->ModifyValue(m_Modification);
         }
 
         void Rollback() override
         {
-            Logger::LogMessage("Rollback AdditionCommand");
-            m_Value->Subtract(m_Modification);
+            m_Value->ModifyValue(-m_Modification);
         }
     private:
         std::shared_ptr<WorkingValue> m_Value{};
         WorkingValue::ValueType m_Modification{};
     };
 
-    class SubtractCommand final : public Command
+    [[nodiscard]] static std::shared_ptr<Command> CreateModifyValueLambdaCommand(
+        std::shared_ptr<WorkingValue> value, const int32_t valueModification)
     {
-    public:
-        SubtractCommand(std::shared_ptr<WorkingValue> value)
-            : m_Value{value}
-            , m_Modification{Random::RandomInRange(1, 100)}
-        {
-        }
-
-        void Execute() override
-        {
-            Logger::LogMessage("Execute SubtractCommand");
-            m_Value->Subtract(m_Modification);
-        }
-
-        void Rollback() override
-        {
-            Logger::LogMessage("Rollback SubtractCommand");
-            m_Value->Add(m_Modification);
-        }
-    private:
-        std::shared_ptr<WorkingValue> m_Value{};
-        WorkingValue::ValueType m_Modification{};
-    };
-
-    [[nodiscard]] static std::shared_ptr<Command> CreateRandomCommand(std::shared_ptr<WorkingValue> value)
-    {
-        switch (Random::RandomInRange(0, 2))
-        {
-        case 0:
+        return std::make_shared<LambdaCommand>(
+            [value, valueModification]
             {
-                const WorkingValue::ValueType modification{Random::RandomInRange(1, 100)};
-                return std::make_shared<LambdaCommand>(
-                    [value, modification]
-                    {
-                        Logger::LogMessage("Execute CommandLambda");
-                        value->Add(modification);
-                    },
-                    [value, modification]
-                    {
-                        Logger::LogMessage("Rollback CommandLambda");
-                        value->Subtract(modification);
-                    });
-            }
-        case 1:
-            return std::make_shared<AdditionCommand>(value);
-        case 2:
-        default:
-            return std::make_shared<SubtractCommand>(value);
-        }
+                value->ModifyValue(valueModification);
+            },
+            [value, valueModification]
+            {
+                value->ModifyValue(-valueModification);
+            });
+    }
+
+    [[nodiscard]] static std::shared_ptr<Command> CreateModifyValueCommand(
+        std::shared_ptr<WorkingValue> value, const int32_t valueModification)
+    {
+        return std::make_shared<ModifyValueCommand>(value, valueModification);
+    }
+
+    [[nodiscard]] static std::shared_ptr<Command> CreateRandomCommand(
+        std::shared_ptr<WorkingValue> value, const int32_t valueModification = 0)
+    {
+        if(Random::RandomBool())
+            return CreateModifyValueLambdaCommand(value, valueModification);
+
+        return CreateModifyValueCommand(value, valueModification);
     }
 }
 
-// TODO : Add WorkingValue checks to make sure all the modifications happen in the correct order.
 TEST_CASE("Command Queue", "")
 {
     std::shared_ptr<WorkingValue> value{std::make_shared<WorkingValue>()};
     CommandQueue queue{};
+    REQUIRE(value->GetValue() == 0);
     REQUIRE_FALSE(queue.HasPendingCommand());
     REQUIRE_FALSE(queue.HasPendingRollbackCommand());
     REQUIRE(queue.GetCommandIndex() == 0);
@@ -120,14 +86,16 @@ TEST_CASE("Command Queue", "")
 
     SECTION("Add Commands")
     {
-        queue.QueueCommand(CreateRandomCommand(value));
+        queue.QueueCommand(CreateRandomCommand(value, 1));
+        REQUIRE(value->GetValue() == 0);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 1);
 
-        queue.QueueCommand(CreateRandomCommand(value));
-        queue.QueueCommand(CreateRandomCommand(value));
+        queue.QueueCommand(CreateRandomCommand(value, 2));
+        queue.QueueCommand(CreateRandomCommand(value, 3));
+        REQUIRE(value->GetValue() == 0);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
@@ -136,29 +104,33 @@ TEST_CASE("Command Queue", "")
 
     SECTION("Execute Commands")
     {
-        queue.QueueCommand(CreateRandomCommand(value));
+        queue.QueueCommand(CreateRandomCommand(value, 1));
+        REQUIRE(value->GetValue() == 0);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 1);
 
-        queue.ExecuteCommand();
+        queue.ExecuteCommand(); // +1
+        REQUIRE(value->GetValue() == 1);
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
         REQUIRE(queue.GetCommandQueueSize() == 1);
 
-        queue.QueueCommand(CreateRandomCommand(value));
-        queue.QueueCommand(CreateRandomCommand(value));
-        queue.QueueCommand(CreateRandomCommand(value));
+        queue.QueueCommand(CreateRandomCommand(value, 2));
+        queue.QueueCommand(CreateRandomCommand(value, 3));
+        queue.QueueCommand(CreateRandomCommand(value, 4));
+        REQUIRE(value->GetValue() == 1);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
         REQUIRE(queue.GetCommandQueueSize() == 4);
 
-        queue.ExecuteCommand();
-        queue.ExecuteCommand();
-        queue.ExecuteCommand();
+        queue.ExecuteCommand(); // +2
+        queue.ExecuteCommand(); // +3
+        queue.ExecuteCommand(); // +4
+        REQUIRE(value->GetValue() == 10);
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 4);
@@ -167,85 +139,97 @@ TEST_CASE("Command Queue", "")
 
     SECTION("Clear Command Queue")
     {
-        queue.QueueCommand(CreateRandomCommand(value));
-        queue.QueueCommand(CreateRandomCommand(value));
-        queue.QueueCommand(CreateRandomCommand(value));
+        queue.QueueCommand(CreateRandomCommand(value, 1));
+        queue.QueueCommand(CreateRandomCommand(value, 2));
+        queue.QueueCommand(CreateRandomCommand(value, 3));
+        REQUIRE(value->GetValue() == 0);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.ExecuteCommand();
-        queue.ExecuteCommand();
-        queue.ExecuteCommand();
+        queue.ExecuteCommand(); // +1
+        queue.ExecuteCommand(); // +2
+        queue.ExecuteCommand(); // +3
+        REQUIRE(value->GetValue() == 6);
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 3);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.ClearQueue();
+        queue.ClearQueue(); // Remove +1, +2, +3
+        REQUIRE(value->GetValue() == 6);
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 0);
     }
 
-    SECTION("Clear Pending Commands")
+    SECTION("Clear Commands")
     {
-        queue.QueueCommand(CreateRandomCommand(value));
-        queue.QueueCommand(CreateRandomCommand(value));
-        queue.QueueCommand(CreateRandomCommand(value));
+        queue.QueueCommand(CreateRandomCommand(value, 1));
+        queue.QueueCommand(CreateRandomCommand(value, 2));
+        queue.QueueCommand(CreateRandomCommand(value, 3));
+        REQUIRE(value->GetValue() == 0);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.ExecuteCommand();
+        queue.ExecuteCommand(); // +1
+        REQUIRE(value->GetValue() == 1);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.ClearPendingCommands();
+        queue.ClearPendingCommands(); // Remove +2, +3
+        REQUIRE(value->GetValue() == 1);
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
         REQUIRE(queue.GetCommandQueueSize() == 1);
 
-        queue.QueueCommand(CreateRandomCommand(value));
+        queue.QueueCommand(CreateRandomCommand(value, 4));
+        REQUIRE(value->GetValue() == 1);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
         REQUIRE(queue.GetCommandQueueSize() == 2);
 
-        queue.ClearPendingCommands();
+        queue.ClearPendingCommands(); // Remove +4
+        REQUIRE(value->GetValue() == 1);
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
         REQUIRE(queue.GetCommandQueueSize() == 1);
 
-        queue.QueueCommand(CreateRandomCommand(value));
-        queue.QueueCommand(CreateRandomCommand(value));
-        queue.ExecuteCommand();
+        queue.QueueCommand(CreateRandomCommand(value, 5));
+        queue.QueueCommand(CreateRandomCommand(value, 6));
+        queue.ExecuteCommand(); // +5
+        REQUIRE(value->GetValue() == 6);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 2);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.ClearPendingCommands();
+        queue.ClearPendingCommands(); // Remove +6
+        REQUIRE(value->GetValue() == 6);
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 2);
         REQUIRE(queue.GetCommandQueueSize() == 2);
 
-        queue.RollbackCommand();
-        queue.RollbackCommand();
+        queue.RollbackCommand(); // -5
+        queue.RollbackCommand(); // -1
+        REQUIRE(value->GetValue() == 0);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 2);
 
-        queue.ClearPendingCommands();
+        queue.ClearPendingCommands(); // Remove +1, +5
+        REQUIRE(value->GetValue() == 0);
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
@@ -254,47 +238,54 @@ TEST_CASE("Command Queue", "")
 
     SECTION("Execute Rollback Commands")
     {
-        queue.QueueCommand(CreateRandomCommand(value));
+        queue.QueueCommand(CreateRandomCommand(value, 1));
+        REQUIRE(value->GetValue() == 0);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 1);
 
-        queue.ExecuteCommand();
+        queue.ExecuteCommand(); // +1
+        REQUIRE(value->GetValue() == 1);
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 1);
         REQUIRE(queue.GetCommandQueueSize() == 1);
 
-        queue.RollbackCommand();
+        queue.RollbackCommand(); // -1
+        REQUIRE(value->GetValue() == 0);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 1);
 
-        queue.QueueCommand(CreateRandomCommand(value));
-        queue.QueueCommand(CreateRandomCommand(value));
+        queue.QueueCommand(CreateRandomCommand(value, 2));
+        queue.QueueCommand(CreateRandomCommand(value, 3));
+        REQUIRE(value->GetValue() == 0);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.ExecuteCommand();
-        queue.ExecuteCommand();
-        queue.ExecuteCommand();
+        queue.ExecuteCommand(); // +1
+        queue.ExecuteCommand(); // +2
+        queue.ExecuteCommand(); // +3
+        REQUIRE(value->GetValue() == 6);
         REQUIRE_FALSE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 3);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.RollbackCommand();
+        queue.RollbackCommand(); // -3
+        REQUIRE(value->GetValue() == 3);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 2);
         REQUIRE(queue.GetCommandQueueSize() == 3);
 
-        queue.RollbackCommand();
-        queue.RollbackCommand();
+        queue.RollbackCommand(); // -2
+        queue.RollbackCommand(); // -1
+        REQUIRE(value->GetValue() == 0);
         REQUIRE(queue.HasPendingCommand());
         REQUIRE_FALSE(queue.HasPendingRollbackCommand());
         REQUIRE(queue.GetCommandIndex() == 0);
