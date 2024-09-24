@@ -2,6 +2,10 @@
 
 This pattern was inspired by [Game Programming Patterns](https://gameprogrammingpatterns.com/).
 
+## When To Use
+
+...
+
 ## Features
 
 The command queue can:
@@ -61,6 +65,7 @@ Queuing a command after rolling back a command will add the new command to the b
 ## Setup
 
 This repository uses the .sln/.proj files created by Visual Studio 2022 Community Edition.
+Using MSVC compiler, Preview version(C++23 Preview). 
 
 ### Catch2
 The examples for how to use the pattern are written as Unit Tests.
@@ -91,7 +96,7 @@ To create a clean vcpkg.json and vcpkg-configuration.json file run:
 vcpkg new --application
 ```
 
-TODO:
+### TODO
 - [x] Inheritance Implementation
 - [x] Inheritance Implementation Unit Tests
 - [ ] Type Erasure Implementation Example
