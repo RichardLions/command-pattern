@@ -3,7 +3,7 @@
 #include <memory>
 #include <utility>
 
-#include "referencesemantics/commandpattern.h"
+#include "referencesemantics/commands.h"
 
 namespace ReferenceSemantics
 {
@@ -46,12 +46,6 @@ namespace ReferenceSemantics
         [[nodiscard]] bool HasPendingRollbackCommand() const
         {
             return m_CommandIndex != 0 && GetCommandQueueSize() >= m_CommandIndex;
-        }
-
-        template<class CommandType>
-        void QueueCommand(CommandType&& command)
-        {
-            m_CommandQueue.push_back(std::make_unique<CommandType>(std::forward<CommandType>(command)));
         }
 
         void QueueCommand(std::unique_ptr<Command>&& command)

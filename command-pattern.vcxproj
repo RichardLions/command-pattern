@@ -28,12 +28,18 @@
     <None Include="vcpkg.json" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="referencesemantics\commandpattern.h" />
-    <ClInclude Include="referencesemantics\commandqueuepattern.h" />
-    <ClInclude Include="referencesemantics\commandqueuepatternexamples.h" />
+    <ClInclude Include="referencesemantics\commandqueue.h" />
+    <ClInclude Include="referencesemantics\commandqueueexamples.h" />
+    <ClInclude Include="referencesemantics\commands.h" />
+    <ClInclude Include="valuesemantics\commandqueue.h" />
+    <ClInclude Include="valuesemantics\commandoperations.h" />
+    <ClInclude Include="valuesemantics\commandqueueexamples.h" />
+    <ClInclude Include="valuesemantics\commands.h" />
+    <ClInclude Include="workingvalue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="valuesemantics\commandoperations.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

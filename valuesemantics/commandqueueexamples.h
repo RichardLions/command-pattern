@@ -1,50 +1,14 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/benchmark/catch_benchmark.hpp>
 
-#include "referencesemantics/commandpattern.h"
-#include "referencesemantics/commandqueuepattern.h"
+#include "valuesemantics/commands.h"
+#include "valuesemantics/commandqueue.h"
+#include "workingvalue.h"
 
-namespace ReferenceSemantics
+namespace ValueSemantics
 {
     namespace
     {
-        class WorkingValue
-        {
-        public:
-            using ValueType = int32_t;
-
-            [[nodiscard]] ValueType GetValue() const { return m_Value; }
-            void ModifyValue(const ValueType modification)
-            {
-                m_Value += modification;
-            }
-        private:
-            ValueType m_Value{0};
-        };
-
-        class ModifyValueCommand final : public Command
-        {
-        public:
-            ModifyValueCommand(std::shared_ptr<WorkingValue> value, const int32_t valueModification)
-                : m_Value{value}
-                , m_Modification{valueModification}
-            {
-            }
-
-            void Execute() override
-            {
-                m_Value->ModifyValue(m_Modification);
-            }
-
-            void Rollback() override
-            {
-                m_Value->ModifyValue(-m_Modification);
-            }
-        private:
-            std::shared_ptr<WorkingValue> m_Value{};
-            WorkingValue::ValueType m_Modification{};
-        };
-
         [[nodiscard]] static LambdaCommand CreateLambdaCommand(
             std::shared_ptr<WorkingValue> value, const int32_t valueModification)
         {
@@ -66,7 +30,7 @@ namespace ReferenceSemantics
         }
     }
 
-    TEST_CASE("Command Queue - Unit Tests")
+    TEST_CASE("Command Queue - Value Semantics - Unit Tests")
     {
         std::shared_ptr<WorkingValue> value{std::make_shared<WorkingValue>()};
         CommandQueue queue{};
@@ -285,11 +249,11 @@ namespace ReferenceSemantics
         }
     }
 
-    TEST_CASE("Command Queue - Benchmarks")
+    TEST_CASE("Command Queue - Value Semantics - Creation Benchmark")
     {
         BENCHMARK("Benchmark")
         {
-            constexpr uint32_t creationCount{10'000};
+            constexpr uint32_t creationCount{50'000};
             std::shared_ptr<WorkingValue> value{std::make_shared<WorkingValue>()};
             CommandQueue queue{};
 
@@ -299,6 +263,32 @@ namespace ReferenceSemantics
                 queue.QueueCommand(CreateLambdaCommand(value, 0));
             }
 
+            while(queue.HasPendingCommand())
+            {
+                queue.ExecuteCommand();
+            }
+
+            while(queue.HasPendingRollbackCommand())
+            {
+                queue.RollbackCommand();
+            }
+        };
+    }
+
+    TEST_CASE("Command Queue - Value Semantics - Execute/Rollback Benchmark")
+    {
+        constexpr uint32_t creationCount{50'000};
+        std::shared_ptr<WorkingValue> value{std::make_shared<WorkingValue>()};
+        CommandQueue queue{};
+
+        for(uint32_t i{0}; i != creationCount; ++i)
+        {
+            queue.QueueCommand(CreateCommand(value, 0));
+            queue.QueueCommand(CreateLambdaCommand(value, 0));
+        }
+
+        BENCHMARK("Benchmark")
+        {
             while(queue.HasPendingCommand())
             {
                 queue.ExecuteCommand();

@@ -1,6 +1,7 @@
 #include <catch2/catch_session.hpp>
 
-#include "referencesemantics/commandqueuepatternexamples.h"
+#include "referencesemantics/commandqueueexamples.h"
+#include "valuesemantics/commandqueueexamples.h"
 
 int main(const int argc, const char* const argv[])
 {
