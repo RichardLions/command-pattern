@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Misc">
+      <UniqueIdentifier>{65bf468f-ad40-4acf-b346-c743097587ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ReferenceSemantics">
+      <UniqueIdentifier>{42e031e4-23dd-4441-9daa-b5b236fc4498}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".editorconfig">
+      <Filter>Misc</Filter>
+    </None>
+    <None Include=".gitattributes">
+      <Filter>Misc</Filter>
+    </None>
+    <None Include=".gitignore">
+      <Filter>Misc</Filter>
+    </None>
+    <None Include=".runsettings">
+      <Filter>Misc</Filter>
+    </None>
+    <None Include="README.md">
+      <Filter>Misc</Filter>
+    </None>
+    <None Include="vcpkg.json">
+      <Filter>Misc</Filter>
+    </None>
+    <None Include="vcpkg-configuration.json">
+      <Filter>Misc</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="referencesemantics\commandpattern.h">
+      <Filter>ReferenceSemantics</Filter>
+    </ClInclude>
+    <ClInclude Include="referencesemantics\commandqueuepattern.h">
+      <Filter>ReferenceSemantics</Filter>
+    </ClInclude>
+    <ClInclude Include="referencesemantics\commandqueuepatternexamples.h">
+      <Filter>ReferenceSemantics</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+</Project>
