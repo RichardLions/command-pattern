@@ -1,6 +1,6 @@
 # Command Pattern
 
-This pattern was inspired by [Game Programming Patterns](https://gameprogrammingpatterns.com/).
+This pattern was inspired by [Game Programming Patterns](https://gameprogrammingpatterns.com/command.html).
 
 ## When To Use
 
