@@ -100,8 +100,8 @@ vcpkg new --application
 ```
 
 ### TODO
-- [x] Inheritance Implementation
-- [x] Inheritance Implementation Unit Tests
-- [x] Type Erasure Implementation Example
-- [x] Type Erasure Implementation Example Unit Tests
+- [x] Reference Semantics Implementation
+- [x] Reference Semantics Implementation Unit Tests
+- [x] Value Semantics Implementation Example
+- [x] Value Semantics Implementation Example Unit Tests
 - [x] Benchmarking
